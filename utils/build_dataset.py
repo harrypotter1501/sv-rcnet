@@ -1,9 +1,8 @@
-import cv2
 from PIL import Image
-import torch
 from torch.utils.data import Dataset
 
-class customDataset(Dataset):
+
+class SVRCDataset(Dataset):
     def __init__(self, image_path: list, image_class: list, transform = None):
         self.image_path = image_path
         self.image_class = image_class
@@ -19,7 +18,4 @@ class customDataset(Dataset):
             img = self.transform(img)
 
         return img, label
-
-
-
 
