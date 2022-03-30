@@ -19,7 +19,7 @@ def train():
     start_time = time.time()
     
     trainer = Train(model)
-    trainer.trian(y, X)
+    trainer.train(y, X)
     
     end_time = time.time()
     print('Time:{:.2}min'.format((end_time-start_time)/60.0))
