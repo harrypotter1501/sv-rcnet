@@ -53,9 +53,6 @@ def clean_labels(labels_df, names_df):
         '''
         return SequenceMatcher(None, a, b).ratio()
 
-    # drop rows with PhaseName == 'Access'
-    labels_df = labels_df.drop(labels_df[labels_df['PhaseName'] == 'Access'].index)
-
     # add a new column
     labels_df['PhaseNameClean'] = labels_df['PhaseName'].map(
         # compare raw label with true names
@@ -66,6 +63,11 @@ def clean_labels(labels_df, names_df):
             ).argmax()
         ].values[0]
     )
+
+    # drop rows with PhaseName == 'Access'
+    labels_df = labels_df.drop(labels_df[
+        (labels_df['PhaseName'] == 'access')# | (labels_df['PhaseName'] == 'acquiring suture')
+    ].index)
 
     return labels_df
 
