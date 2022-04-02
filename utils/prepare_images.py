@@ -34,8 +34,10 @@ def prepare_images(video_base, image_base, labels_df, names_df, image_ext='png')
         # 这warning好烦但我懒得改了
         for image in images:
             # check paths
-            base = os.path.join(image_base, video.split('.')[0])
-            path = os.path.join(base, image)
+            # base = os.path.join(image_base, video.split('.')[0])
+            base = image_base +'/' +video.split('.')[0]
+            path = base + '/' + image
+            # path = os.path.join(base, image)
             # if '-' in image:
             #     continue
             t = int(image.split('.')[0].split('-')[0])
