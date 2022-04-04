@@ -23,7 +23,7 @@ def prepare_images(video_base, image_base, labels_df, names_df, image_ext='png')
         ).seconds
 
     # extract names
-    for video in sorted(videos)[92]:
+    for video in sorted(videos)[:70]:
         images = [
             dir for dir in os.listdir(os.path.join(image_base, video.split('.')[0]))
             if dir.endswith(image_ext)
@@ -48,7 +48,7 @@ def prepare_images(video_base, image_base, labels_df, names_df, image_ext='png')
                     (video_df['StartSec'] <= t) & (t <= video_df['EndSec'])
                 ]['PhaseName'].iloc[0]
                 # find correct integer labels
-                label = names_df[names_df['Name'] == name].index[0]
+                label = names_df[names_df['labels'] == name].index[0]
             except:
                 label = 14
             # incorperate label into filenames
