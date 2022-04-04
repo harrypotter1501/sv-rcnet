@@ -30,7 +30,7 @@ class SVRCDataset_Old(Dataset):
         return img, label
 
 
-class SVRCDataset(Dataset):
+class CheckDataset(Dataset):
     def __init__(self, images: list=None, labels: list=None, transform = None):
         self.inited = False
         self.image_path = images
