@@ -3,7 +3,7 @@ from torch import nn
 from torchvision import models
 
 from torch.utils.data import DataLoader, SequentialSampler, BatchSampler
-from mydataset import SVRCDataset
+from utils.mydataset import SVRCDataset
 
 import numpy as np
 
