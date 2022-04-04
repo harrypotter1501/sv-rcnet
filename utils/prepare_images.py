@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Assign each image in data/images with corresponding labels. 
 '''
@@ -22,7 +23,7 @@ def prepare_images(video_base, image_base, labels_df, names_df, image_ext='png')
         ).seconds
 
     # extract names
-    for video in videos:
+    for video in sorted(videos)[92]:
         images = [
             dir for dir in os.listdir(os.path.join(image_base, video.split('.')[0]))
             if dir.endswith(image_ext)
@@ -42,11 +43,14 @@ def prepare_images(video_base, image_base, labels_df, names_df, image_ext='png')
             #     continue
             t = int(image.split('.')[0].split('-')[0])
             # select interval and remove tailing digits
-            name = video_df[
-                (video_df['StartSec'] <= t) & (t <= video_df['EndSec'])
-            ]['PhaseName'].iloc[0]
-            # find correct integer labels
-            label = names_df[names_df['Name'] == name].index[0]
+            try:
+                name = video_df[
+                    (video_df['StartSec'] <= t) & (t <= video_df['EndSec'])
+                ]['PhaseName'].iloc[0]
+                # find correct integer labels
+                label = names_df[names_df['Name'] == name].index[0]
+            except:
+                label = 14
             # incorperate label into filenames
             if '-' not in path:
                 # avoid renaming twice
