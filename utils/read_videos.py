@@ -14,12 +14,17 @@ def read(videos, image_base, ind_end:int, ind_start=0) -> tuple[list, list]:
 
     for video in sorted(videos[ind_start:ind_end]):
         base = os.path.join(image_base, video.split('.')[0])
-        image_paths += list(map(
+        image_paths.append(list(map(
             lambda img: os.path.join(base, img) if img.endswith('.png') else None, 
             os.listdir(base)
-        ))
+        )))
 
-    image_paths = sorted(list(filter(None, image_paths)), key=sort_images)
-    labels = [int(img.split('.')[0].split('-')[1]) for img in image_paths]
+    image_paths = [list(filter(None, images)) for images in image_paths]
+    image_paths = [list(sorted(images, key=sort_images)) for images in image_paths]
+
+    labels = [
+        [int(img.split('.')[0].split('-')[1]) for img in images]
+        for images in image_paths
+    ]
 
     return image_paths, labels

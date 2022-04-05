@@ -36,29 +36,26 @@ data_transform = {
 }
 
 # Weights path
-WeightsPath = './models/weights_resnet18_70'
-WeightsPath_LSTM = './models/weights_resnet18_70_LSTM'
+WeightsPath = './models/weights_resnet18_50'
+WeightsPath_LSTM = './models/weights_resnet18_50_LSTM'
 
 
-# Pretrain Resnet
 def train(y:list, X:list, pretrain = True) -> None:
-    
     model = SVRC()
     model.pretrain = pretrain
-    if torch.cuda.is_available:
+    if torch.cuda.is_available():
         model.to(device)
 
     start_time = time.time()
     if pretrain == True:
-        trainer = ResnetTrainVal(model, device, EPOCH=5, BATCH_SIZE=64, LR=1e-3)
-        path = WeightsPath
+        trainer = ResnetTrainVal(model, device, EPOCH=10, BATCH_SIZE=64, LR=1e-3)
+        trainer.train(y, X, data_transform['train'], path=WeightsPath, val_ratio=0.7)
     else:
+        model.load_state_dict(torch.load(WeightsPath, map_location=device), strict=False)
         trainer = LstmTrainVal(model, device, EPOCH=10, BATCH_SIZE=3, LR=1e-5)
-        path = WeightsPath_LSTM
+        trainer.train(y,X,transform=data_transform['train'], path=WeightsPath_LSTM, eval_intval=2)
 
-    trainer.train(y, X, data_transform['train'])
-
-    torch.save(model.state_dict(),path)
+    #path += str(int(time.time()))
 
     end_time = time.time()
     print('Time:{:.2}min'.format((end_time-start_time)/60.0))
@@ -67,23 +64,23 @@ def test(y, X, weights, batch, pretrain = False) -> list:
     predicts = []
     model = SVRC()
     model.pretrain = pretrain
-    if torch.cuda.is_available:
+    if torch.cuda.is_available():
         model.to(device)
-    model.load_state_dict(torch.load(weights))
+    model.load_state_dict(torch.load(weights, map_location=device))
     predicts = model.predict(X, y, BATCH_SIZE=batch, transform = data_transform['train'])
     return predicts
 
 def main():
-    X = image_paths[:50]
-    y = labels[:50]
-    X_test = image_paths[50:70]
-    y_test = labels[50:70]
-    
+    X = sum(image_paths[:50], [])
+    y = sum(labels[:50], [])
+    X_test = sum(image_paths[50:70], [])
+    y_test = sum(labels[50:70], [])
+
     train(y,X,pretrain=True)
-    test(y_test, X_test, WeightsPath, batch=64, pretrain = True)
-    
+    preds_res = test(y_test, X_test, WeightsPath, batch=64, pretrain = True)
+
     train(y,X,pretrain=False)
-    test(y_test, X_test, WeightsPath_LSTM, batch=3)
+    preds_svrc = test(y_test, X_test, WeightsPath_LSTM, batch=3)
 
 if __name__ == "__main__":
     main()

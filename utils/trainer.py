@@ -4,7 +4,7 @@ Train SVRCNet
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, random_split, SequentialSampler, BatchSampler
-from mydataset import SVRCDataset
+from utils.mydataset import SVRCDataset
 
 class ResnetTrainVal(object):
     def __init__(self, model, device, EPOCH, BATCH_SIZE, LR) -> None:
@@ -16,7 +16,7 @@ class ResnetTrainVal(object):
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.LR)
         self.criterion = nn.CrossEntropyLoss()
 
-    def train(self, labels, features, transform, val_ratio=0.7):
+    def train(self, labels, features, transform, path, val_ratio=0.7):
         print('Training ResNet: ')
         
         TRAIN_SIZE = int(val_ratio * len(features))
@@ -55,6 +55,8 @@ class ResnetTrainVal(object):
             
             train_loss /= len(train)
             train_acc /= len(train)
+            torch.save(self.model.state_dict(),path)
+
 
             valid_loss = 0.0
             valid_acc = 0.0
@@ -91,7 +93,7 @@ class LstmTrainVal(object):
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.LR)
         self.criterion = nn.CrossEntropyLoss()
 
-    def train(self, labels, features, transform, eval_intval=3):
+    def train(self, labels, features, validation :tuple, transform, path, eval_intval=3):
         dataset = SVRCDataset(features, labels, transform)
         data_loader = DataLoader(
             dataset, batch_sampler=BatchSampler(
@@ -100,43 +102,69 @@ class LstmTrainVal(object):
                 drop_last=True
             )
         )
+        valid_set = SVRCDataset(validation[0], validation[1], transform)
+        valid_loader = DataLoader(
+            valid_set, batch_sampler=BatchSampler(
+                SequentialSampler(valid_set), 
+                self.BATCH_SIZE, 
+                drop_last=True
+            )
+        )
 
         self.model.pretrain = False
 
         for epoch in range(self.EPOCH):
-            if (epoch + 1) % eval_intval == 0:
-                self.model.eval()
-            else:
-                self.model.lstm.train()
-                self.model.full.train()
+            self.model.lstm.train()
+            self.model.full.train()
 
             train_loss = 0.0
             train_acc = 0.0
 
             for i, data in enumerate(data_loader):
                 features  = data['feature'].float()
-                
                 labels = data['label']
                 features, labels = features.to(self.device), labels.to(self.device)
                 predictions = self.model(features)
                 loss = self.criterion(predictions, labels)
 
-                if not (epoch + 1) % eval_intval == 0:
-                    self.optimizer.zero_grad()
-                    loss.backward()
-                    self.optimizer.step()
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
 
                 train_loss += loss.item()
                 preds = torch.max(predictions.data, 1)[1]
                 train_acc += (preds==labels).sum().item()
 
+            torch.save(self.model.state_dict(),path)
+
+
             train_loss /= len(dataset)
             train_acc /= len(dataset)
 
-            print('Epoch {} - {} Loss: {} Acc: {} LSTM'.format(
-                epoch+1, 'Train' if not (epoch + 1) % eval_intval == 0 else 'Valid', 
-                train_loss, train_acc
-            ))
+            print(f'Epoch {epoch+1} Training Loss: {train_loss} Train_acc: {train_acc}')
+
+            if (epoch + 1) % eval_intval == 0:
+                valid_loss = 0.0
+                valid_acc = 0.0
+                total = 0
+                self.model.eval()
+                for i, data in enumerate(valid_loader):
+                    features = data['feature']
+                    labels = data['label']
+
+                    features, labels = features.to(self.device), labels.to(self.device)
+                    predictions = self.model(features)
+                    loss = self.criterion(predictions,labels)
+                    valid_loss += loss.item()
+
+                    preds = torch.max(predictions.data, 1)[1]
+                    valid_acc += (preds==labels).sum().item()
+                    total += features.size(0)
+
+                valid_loss /= len(valid_set)
+                valid_acc /= len(valid_set)
+
+                print(f'Validation Loss: {valid_loss} Valid_acc: {valid_acc}')
 
 
 class Evaluator:
@@ -144,10 +172,11 @@ class Evaluator:
         self.model = model
         self.device = device
 
-    def predict(self, images, transform):
+    def predict(self, images, transform, pretrain):
         dataset = SVRCDataset(images, None, transform)
-        loader = DataLoader(dataset)
+        loader = DataLoader(dataset, batch_size=3, drop_last=True)
         preds = []
+        self.model.pretrain = pretrain
         self.model.eval()
         for i,data in enumerate(loader):
             feature = data['feature'].float().to(self.device)
@@ -156,6 +185,6 @@ class Evaluator:
         return preds
 
     def eval(self, preds, labels):
-        acc = sum([p.item() == l for p,l in zip(preds, labels)]) / len(labels)
+        acc = sum([p == l for p,l in zip(sum(list(map(torch.Tensor.tolist, preds)), []), labels)]) / len(labels)
         print('Accuracy: {}'.format(acc))
         return acc
