@@ -13,9 +13,14 @@ def read(videos, image_base, ind_end:int, ind_start=0) -> tuple[list, list]:
     #dataset for test
 
     for video in sorted(videos[ind_start:ind_end]):
-        base = os.path.join(image_base, video.split('.')[0])
+        #base = os.path.join(image_base, video.split('.')[0])
+        base = image_base + '/' + video.split('.')[0]
+        # image_paths.append(list(map(
+        #     lambda img: os.path.join(base, img) if img.endswith('.png') else None, 
+        #     os.listdir(base)
+        # )))
         image_paths.append(list(map(
-            lambda img: os.path.join(base, img) if img.endswith('.png') else None, 
+            lambda img: base + '/' + img if img.endswith('.png') else None, 
             os.listdir(base)
         )))
 

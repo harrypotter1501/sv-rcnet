@@ -55,6 +55,7 @@ class SVRC(nn.Module):
         for i, data in enumerate(loader):
             features = data['feature'].float()
             labels = data['label']
+            features,labels = features.to('cuda:0'), labels.to('cuda:0')
             predictions = self.forward(features)
             preds = torch.max(predictions.data, 1)[1]
             predicts.append(preds)

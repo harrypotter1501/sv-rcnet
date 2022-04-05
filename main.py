@@ -13,12 +13,12 @@ import os
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # put videos here!
-video_base = 'data/videos'
-#video_base = 'D:/e6691/6691_assignment2/videos'
+#video_base = 'data/videos'
+video_base = 'D:/e6691/6691_assignment2/videos'
 videos = os.listdir(video_base)
 # images will be output to here
-image_base = 'data/images'
-#image_base = 'D:/e6691/6691_assignment2/images'
+#image_base = 'data/images'
+image_base = 'D:/e6691/6691_assignment2/images'
 if not os.path.exists(image_base):
     os.mkdir(image_base)
 
@@ -36,13 +36,13 @@ data_transform = {
 }
 
 # Weights path
-WeightsPath = './models/weights_resnet18_50'
-WeightsPath_LSTM = './models/weights_resnet18_50_LSTM'
-ResultsPath = './results/hist_resnet.txt'
-ResultsPath_LSTM = './results/hist_lstm.txt'
+WeightsPath = './models/weights_resnet18_50_1'
+WeightsPath_LSTM = './models/weights_resnet18_50_LSTM_1'
+ResultsPath = './results/hist_resnet_1.txt'
+ResultsPath_LSTM = './results/hist_lstm_1.txt'
 
 
-def train(y:list, X:list, pretrain = True) -> None:
+def train(y:list, X:list, validation, pretrain) -> None:
     model = SVRC()
     model.pretrain = pretrain
     if torch.cuda.is_available():
@@ -57,7 +57,7 @@ def train(y:list, X:list, pretrain = True) -> None:
     else:
         model.load_state_dict(torch.load(WeightsPath, map_location=device), strict=False)
         trainer = LstmTrainVal(model, device, EPOCH=10, BATCH_SIZE=3, LR=1e-5)
-        hist = trainer.train(y,X,transform=data_transform['train'], path=WeightsPath_LSTM, eval_intval=2)
+        hist = trainer.train(y,X, validation, transform=data_transform['train'], path=WeightsPath_LSTM, eval_intval=2)
         with open(ResultsPath_LSTM, 'w') as f:
             f.write(str(hist))
 
