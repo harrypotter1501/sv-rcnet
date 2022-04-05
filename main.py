@@ -38,6 +38,8 @@ data_transform = {
 # Weights path
 WeightsPath = './models/weights_resnet18_50'
 WeightsPath_LSTM = './models/weights_resnet18_50_LSTM'
+ResultsPath = './results/hist_resnet.txt'
+ResultsPath_LSTM = './results/hist_lstm.txt'
 
 
 def train(y:list, X:list, pretrain = True) -> None:
@@ -49,16 +51,22 @@ def train(y:list, X:list, pretrain = True) -> None:
     start_time = time.time()
     if pretrain == True:
         trainer = ResnetTrainVal(model, device, EPOCH=10, BATCH_SIZE=64, LR=1e-3)
-        trainer.train(y, X, data_transform['train'], path=WeightsPath, val_ratio=0.7)
+        hist = trainer.train(y, X, data_transform['train'], path=WeightsPath, val_ratio=0.7)
+        with open(ResultsPath, 'w') as f:
+            f.write(str(hist))
     else:
         model.load_state_dict(torch.load(WeightsPath, map_location=device), strict=False)
         trainer = LstmTrainVal(model, device, EPOCH=10, BATCH_SIZE=3, LR=1e-5)
-        trainer.train(y,X,transform=data_transform['train'], path=WeightsPath_LSTM, eval_intval=2)
+        hist = trainer.train(y,X,transform=data_transform['train'], path=WeightsPath_LSTM, eval_intval=2)
+        with open(ResultsPath_LSTM, 'w') as f:
+            f.write(str(hist))
 
     #path += str(int(time.time()))
 
     end_time = time.time()
     print('Time:{:.2}min'.format((end_time-start_time)/60.0))
+
+    return hist
 
 def test(y, X, weights, batch, pretrain = False) -> list:
     predicts = []
@@ -76,10 +84,10 @@ def main():
     X_test = sum(image_paths[50:70], [])
     y_test = sum(labels[50:70], [])
 
-    train(y,X,pretrain=True)
+    hist_res = train(y,X,pretrain=True)
     preds_res = test(y_test, X_test, WeightsPath, batch=64, pretrain = True)
 
-    train(y,X,pretrain=False)
+    hist_svrc = train(y,X,pretrain=False)
     preds_svrc = test(y_test, X_test, WeightsPath_LSTM, batch=3)
 
 if __name__ == "__main__":

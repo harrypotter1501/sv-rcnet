@@ -1,6 +1,7 @@
 '''
 Train SVRCNet
 '''
+from unittest import result
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, random_split, SequentialSampler, BatchSampler
@@ -31,6 +32,11 @@ class ResnetTrainVal(object):
 
         self.model.pretrain = True
 
+        hist_train_loss = []
+        hist_train_acc = []
+        hist_valid_loss = []
+        hist_valid_acc = []
+
         for epoch in range(self.EPOCH):
             self.model.train()
 
@@ -56,6 +62,8 @@ class ResnetTrainVal(object):
             train_loss /= len(train)
             train_acc /= len(train)
             torch.save(self.model.state_dict(),path)
+            hist_train_loss.append(train_loss)
+            hist_train_acc.append(train_acc)
 
 
             valid_loss = 0.0
@@ -77,11 +85,21 @@ class ResnetTrainVal(object):
 
             valid_loss /= len(test)
             valid_acc /= len(test)
+            hist_valid_loss.append(valid_loss)
+            hist_valid_acc.append(valid_acc)
 
             print(
                 f'Epoch {epoch+1} Training Loss: {train_loss} Train_acc: {train_acc}'
                 f'|| Validation Loss: {valid_loss} Valid_acc: {valid_acc}'
             )
+
+        return {
+            'train_loss': hist_train_loss,
+            'train_acc': hist_train_acc,
+            'valid_loss': hist_valid_loss,
+            'valid_acc': hist_valid_acc
+        }
+
 
 class LstmTrainVal(object):
     def __init__(self, model,device, EPOCH, BATCH_SIZE, LR) -> None:
@@ -113,6 +131,11 @@ class LstmTrainVal(object):
 
         self.model.pretrain = False
 
+        hist_train_loss = []
+        hist_train_acc = []
+        hist_valid_loss = []
+        hist_valid_acc = []
+
         for epoch in range(self.EPOCH):
             self.model.lstm.train()
             self.model.full.train()
@@ -140,6 +163,8 @@ class LstmTrainVal(object):
 
             train_loss /= len(dataset)
             train_acc /= len(dataset)
+            hist_train_loss.append(train_loss)
+            hist_train_acc.append(train_acc)
 
             print(f'Epoch {epoch+1} Training Loss: {train_loss} Train_acc: {train_acc}')
 
@@ -163,8 +188,17 @@ class LstmTrainVal(object):
 
                 valid_loss /= len(valid_set)
                 valid_acc /= len(valid_set)
+                hist_valid_loss.append(valid_loss)
+                hist_valid_acc.append(valid_acc)
 
                 print(f'Validation Loss: {valid_loss} Valid_acc: {valid_acc}')
+
+        return {
+            'train_loss': hist_train_loss,
+            'train_acc': hist_train_acc,
+            'valid_loss': hist_valid_loss,
+            'valid_acc': hist_valid_acc
+        }
 
 
 class Evaluator:
