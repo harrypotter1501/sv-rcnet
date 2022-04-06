@@ -24,8 +24,13 @@ class ResnetTrainVal(object):
         TEST_SIZE = len(features) - TRAIN_SIZE
         
         dataset = SVRCDataset(features, labels, transform)
-        train, test = random_split(dataset, [TRAIN_SIZE, TEST_SIZE])
+        if val_ratio != 1.0:
+            train, test = random_split(dataset, [TRAIN_SIZE, TEST_SIZE])
+        else:
+            _, test = random_split(dataset, [int(0.95 * len(features)), len(features)- int(0.95 * len(features))])
+            train = dataset
         print('length of train:', len(train))
+        print('length of test:', len(test))
         
         train_loader = DataLoader(train, self.BATCH_SIZE, shuffle=True)
         test_loader = DataLoader(test, self.BATCH_SIZE, shuffle=True)

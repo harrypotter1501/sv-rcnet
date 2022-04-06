@@ -36,13 +36,13 @@ data_transform = {
 }
 
 # Weights path
-WeightsPath = './models/weights_resnet18_50_1'
-WeightsPath_LSTM = './models/weights_resnet18_50_LSTM_1'
-ResultsPath = './results/hist_resnet_1.txt'
-ResultsPath_LSTM = './results/hist_lstm_1.txt'
+WeightsPath = './models/weights_resnet18_70_2'
+WeightsPath_LSTM = './models/weights_resnet18_70_LSTM_2'
+ResultsPath = './results/hist_resnet_70_2.txt'
+ResultsPath_LSTM = './results/hist_lstm_70_2.txt'
 
 
-def train(y:list, X:list, validation, pretrain) -> None:
+def train(y:list, X:list, validation = None, pretrain = True) -> None:
     model = SVRC()
     model.pretrain = pretrain
     if torch.cuda.is_available():
@@ -51,7 +51,7 @@ def train(y:list, X:list, validation, pretrain) -> None:
     start_time = time.time()
     if pretrain == True:
         trainer = ResnetTrainVal(model, device, EPOCH=10, BATCH_SIZE=64, LR=1e-3)
-        hist = trainer.train(y, X, data_transform['train'], path=WeightsPath, val_ratio=0.7)
+        hist = trainer.train(y, X, data_transform['train'], path=WeightsPath, val_ratio=1.0)
         with open(ResultsPath, 'w') as f:
             f.write(str(hist))
     else:

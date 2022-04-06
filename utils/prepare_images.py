@@ -7,8 +7,7 @@ import os
 from datetime import datetime
 
 
-def prepare_images(video_base, image_base, labels_df, names_df, image_ext='png'):
-    videos = os.listdir(video_base)
+def prepare_images(videos, image_base, labels_df, names_df, image_ext='png'):
     # convert time string to int
     # start time
     t0 = datetime(1900, 1, 1)
@@ -23,9 +22,9 @@ def prepare_images(video_base, image_base, labels_df, names_df, image_ext='png')
         ).seconds
 
     # extract names
-    for video in sorted(videos)[:70]:
+    for video in sorted(videos):
         images = [
-            dir for dir in os.listdir(os.path.join(image_base, video.split('.')[0]))
+            dir for dir in os.listdir(image_base + '/' + video.split('.')[0])
             if dir.endswith(image_ext)
         ]
         # get df corresponding to current video
