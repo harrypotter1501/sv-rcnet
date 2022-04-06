@@ -13,7 +13,7 @@ from config import *
 
 
 def train(y:list, X:list, validation, pretrain = True) -> None:
-    model = SVRC()
+    model = SVRC(baseline)
     model.pretrain = pretrain
     if torch.cuda.is_available():
         model.to(device)
@@ -40,7 +40,7 @@ def train(y:list, X:list, validation, pretrain = True) -> None:
 
 def test(y, X, weights, batch, pretrain = False) -> list:
     predicts = []
-    model = SVRC()
+    model = SVRC(baseline)
     model.pretrain = pretrain
     if torch.cuda.is_available():
         model.to(device)

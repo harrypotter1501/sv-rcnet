@@ -115,6 +115,8 @@ class LstmTrainVal(object):
         self.criterion = nn.CrossEntropyLoss()
 
     def train(self, labels, features, validation :tuple, transform, path, eval_intval=3):
+        print('Training ResNet: ')
+
         dataset = SVRCDataset(features, labels, transform)
         data_loader = DataLoader(
             dataset, batch_sampler=BatchSampler(
@@ -131,6 +133,8 @@ class LstmTrainVal(object):
                 drop_last=True
             )
         )
+        print('length of train:', len(dataset))
+        print('length of validation', len(valid_set))
 
         self.model.pretrain = False
 

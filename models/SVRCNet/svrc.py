@@ -1,3 +1,4 @@
+from email.mime import base
 import torch
 from torch import nn
 from torchvision import models
@@ -7,10 +8,61 @@ from utils.mydataset import SVRCDataset
 
 import numpy as np
 
+
 num_labels = 14
 
-class SVRC(nn.Module):
+class CNN(nn.Module):
     def __init__(self):
+        super(CNN,self).__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(3,32,5,1,2),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(32,128,3,1,2),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+        self.conv3 = nn.Sequential(
+            nn.Conv2d(128,512,3,1,2),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+        self.pool = nn.AdaptiveAvgPool2d((1,1))
+        # self.fc1 = nn.Sequential(nn.Linear(16*8*8, 512), nn.ReLU(),)
+        # self.fc2 = nn.Sequential(nn.Linear(512, 128), nn.ReLU(),)
+        # self.out = nn.Linear(128,num_labels)
+    
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        # x = torch.flatten(x, 1)
+        # x = self.fc1(x)
+        # x = self.fc2(x)
+        # x = self.out(x)
+        x = self.pool(x)
+        return x
+
+    # def predict(self, features):
+    #     self.eval()
+    #     features = torch.from_numpy(features).float()
+    #     labels = self.forward(features).detach().numpy()
+    #     labels = np.argmax(labels, axis=1)
+    #     return labels
+
+
+baseline_models = {
+    'resnet18': nn.Sequential(*(
+        list(models.resnet18(pretrained=True).children())[:-1]
+    )),
+    'cnn': CNN()
+}
+
+
+class SVRC(nn.Module):
+    def __init__(self, baseline):
         super().__init__()
         # ResNet-18
         self.resnet18 = nn.Sequential(*(
@@ -18,6 +70,7 @@ class SVRC(nn.Module):
                 models.resnet18(pretrained=True).children()
             )[:-1]
         ))
+        self.baseline = baseline_models[baseline]
         #self.resnet18.eval()
         self.pretrain = True
         # LSTM
@@ -27,7 +80,8 @@ class SVRC(nn.Module):
         self.full = nn.Linear(512,num_labels)
     
     def forward(self,x):
-        x = self.resnet18(x)
+        x = self.baseline(x)
+        #x = self.resnet18(x)
         # Reshape
         #print(x.shape)
         if not self.pretrain:
@@ -38,7 +92,7 @@ class SVRC(nn.Module):
             
         x = self.full(x.view(-1,512))
         return x #if self.pretrain else nn.Softmax(1)(x).view(30,-1)
-    
+
     def predict(self, X, y, BATCH_SIZE, transform, device):
         self.eval()
         dataset = SVRCDataset(X, y, transform)
@@ -65,3 +119,4 @@ class SVRC(nn.Module):
             test_acc /= len(dataset)
             print(f'test_acc:{test_acc}')
         return predicts
+

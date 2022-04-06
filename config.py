@@ -40,3 +40,5 @@ WeightsPath_LSTM = './models/weights_resnet18_50_LSTM_2'
 ResultsPath = './results/hist_resnet_2.txt'
 ResultsPath_LSTM = './results/hist_lstm_2.txt'
 
+# baseline classification model
+baseline = 'cnn'
