@@ -25,7 +25,7 @@ class ResnetTrainVal(object):
         # TEST_SIZE = len(features) - TRAIN_SIZE
 
         train = SVRCDataset(features, labels, transform)
-        test = SVRCDataset(validation[0], validation[1])
+        test = SVRCDataset(validation[0], validation[1], transform)
         #train, test = random_split(dataset, [TRAIN_SIZE, TEST_SIZE])
         print('length of train:', len(train))
         print('length of validation', len(test))
