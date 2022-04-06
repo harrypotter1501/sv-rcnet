@@ -39,7 +39,7 @@ class SVRC(nn.Module):
         x = self.full(x.view(-1,512))
         return x #if self.pretrain else nn.Softmax(1)(x).view(30,-1)
     
-    def predict(self, X, y, BATCH_SIZE, transform):
+    def predict(self, X, y, BATCH_SIZE, transform, device):
         self.eval()
         dataset = SVRCDataset(X, y, transform)
         loader = DataLoader(
@@ -55,7 +55,7 @@ class SVRC(nn.Module):
         for i, data in enumerate(loader):
             features = data['feature'].float()
             labels = data['label']
-            features,labels = features.to('cuda:0'), labels.to('cuda:0')
+            features,labels = features.to(device), labels.to(device)
             predictions = self.forward(features)
             preds = torch.max(predictions.data, 1)[1]
             predicts.append(preds)

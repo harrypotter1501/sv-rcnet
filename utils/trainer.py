@@ -5,6 +5,7 @@ from unittest import result
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, random_split, SequentialSampler, BatchSampler
+from models.SVRCNet.svrc import SVRC
 from utils.mydataset import SVRCDataset
 
 class ResnetTrainVal(object):
@@ -17,16 +18,18 @@ class ResnetTrainVal(object):
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.LR)
         self.criterion = nn.CrossEntropyLoss()
 
-    def train(self, labels, features, transform, path, val_ratio=0.7):
+    def train(self, labels, features, validation, transform, path): #, val_ratio=0.7):
         print('Training ResNet: ')
-        
-        TRAIN_SIZE = int(val_ratio * len(features))
-        TEST_SIZE = len(features) - TRAIN_SIZE
-        
-        dataset = SVRCDataset(features, labels, transform)
-        train, test = random_split(dataset, [TRAIN_SIZE, TEST_SIZE])
+
+        # TRAIN_SIZE = int(val_ratio * len(features))
+        # TEST_SIZE = len(features) - TRAIN_SIZE
+
+        train = SVRCDataset(features, labels, transform)
+        test = SVRCDataset(validation[0], validation[1])
+        #train, test = random_split(dataset, [TRAIN_SIZE, TEST_SIZE])
         print('length of train:', len(train))
-        
+        print('length of validation', len(test))
+
         train_loader = DataLoader(train, self.BATCH_SIZE, shuffle=True)
         test_loader = DataLoader(test, self.BATCH_SIZE, shuffle=True)
 
@@ -216,9 +219,12 @@ class Evaluator:
             feature = data['feature'].float().to(self.device)
             pred = torch.max(self.model(feature).data, 1)[1]
             preds.append(pred)
-        return preds
+        return sum(list(map(torch.Tensor.tolist, preds)), [])
 
     def eval(self, preds, labels):
-        acc = sum([p == l for p,l in zip(sum(list(map(torch.Tensor.tolist, preds)), []), labels)]) / len(labels)
+        ''' Evaluate the predictions with ground truth labels. 
+            There should not be batched in preds and labels
+        '''
+        acc = sum([p == l for p,l in zip(preds, labels)]) / len(labels)
         print('Accuracy: {}'.format(acc))
         return acc
