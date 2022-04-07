@@ -30,40 +30,69 @@ class CNN(nn.Module):
             nn.MaxPool2d(2),
         )
         self.pool = nn.AdaptiveAvgPool2d((1,1))
-        # self.fc1 = nn.Sequential(nn.Linear(16*8*8, 512), nn.ReLU(),)
-        # self.fc2 = nn.Sequential(nn.Linear(512, 128), nn.ReLU(),)
-        # self.out = nn.Linear(128,num_labels)
     
     def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)
-        # x = torch.flatten(x, 1)
-        # x = self.fc1(x)
-        # x = self.fc2(x)
-        # x = self.out(x)
         x = self.pool(x)
         return x
 
-    # def predict(self, features):
-    #     self.eval()
-    #     features = torch.from_numpy(features).float()
-    #     labels = self.forward(features).detach().numpy()
-    #     labels = np.argmax(labels, axis=1)
-    #     return labels
+
+class DeeperCNN(nn.Module):
+    def __init__(self):
+        super(CNN,self).__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(3,32,5,1,2),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(32,64,5,1,2),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+        self.conv3 = nn.Sequential(
+            nn.Conv2d(64,128,3,1,2),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+        self.conv4 = nn.Sequential(
+            nn.Conv2d(128,256,3,1,2),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+        self.conv5 = nn.Sequential(
+            nn.Conv2d(256,512,3,1,2),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+        self.pool = nn.AdaptiveAvgPool2d((1,1))
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
+        x = self.pool(x)
+        return x
 
 
 baseline_models = {
     'resnet18': nn.Sequential(*(
         list(models.resnet18(pretrained=True).children())[:-1]
     )),
-    'cnn': CNN()
+    'cnn': CNN(), 
+    'deeper-cnn': DeeperCNN()
 }
 
 
 class SVRC(nn.Module):
-    def __init__(self, baseline):
+    def __init__(self, baseline, lstm_dropout=0.0):
         super().__init__()
+        assert baseline in baseline_models.keys(), \
+            'Unknow baseline model, use on of: {}'.format(baseline_models.keys())
         # ResNet-18
         self.resnet18 = nn.Sequential(*(
             list(
@@ -74,11 +103,14 @@ class SVRC(nn.Module):
         #self.resnet18.eval()
         self.pretrain = True
         # LSTM
-        self.lstm = nn.LSTM(512,512,num_layers=1,dropout=0)
+        if lstm_dropout == 0.0:
+            self.lstm = nn.LSTM(512,512,num_layers=1)
+        else:
+            self.lstm = nn.LSTM(512,512,num_layers=2,dropout=lstm_dropout)
         self.lstm_states = None
         # FC
         self.full = nn.Linear(512,num_labels)
-    
+
     def forward(self,x):
         x = self.baseline(x)
         #x = self.resnet18(x)
@@ -103,7 +135,7 @@ class SVRC(nn.Module):
                 drop_last=True
             )
         )
-        
+
         test_acc = 0.0
         predicts = []
         for i, data in enumerate(loader):
