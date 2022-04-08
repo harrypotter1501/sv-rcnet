@@ -5,6 +5,7 @@ from unittest import result
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, random_split, SequentialSampler, BatchSampler
+from models.SVRCNet.svrc import SVRC
 from utils.mydataset import SVRCDataset
 
 class ResnetTrainVal(object):
@@ -17,23 +18,20 @@ class ResnetTrainVal(object):
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.LR)
         self.criterion = nn.CrossEntropyLoss()
 
-    def train(self, labels, features, transform, path, val_ratio=0.7):
+    def train(self, labels, features, validation, transform, path): #, val_ratio=0.7):
         print('Training ResNet: ')
-        
-        TRAIN_SIZE = int(val_ratio * len(features))
-        TEST_SIZE = len(features) - TRAIN_SIZE
-        
-        dataset = SVRCDataset(features, labels, transform)
-        if val_ratio != 1.0:
-            train, test = random_split(dataset, [TRAIN_SIZE, TEST_SIZE])
-        else:
-            _, test = random_split(dataset, [int(0.95 * len(features)), len(features)- int(0.95 * len(features))])
-            train = dataset
+
+        # TRAIN_SIZE = int(val_ratio * len(features))
+        # TEST_SIZE = len(features) - TRAIN_SIZE
+
+        train = SVRCDataset(features, labels, transform['train'])
+        test = SVRCDataset(validation[0], validation[1], transform['valid'])
+        #train, test = random_split(dataset, [TRAIN_SIZE, TEST_SIZE])
         print('length of train:', len(train))
-        print('length of test:', len(test))
-        
-        train_loader = DataLoader(train, self.BATCH_SIZE, shuffle=True)
-        test_loader = DataLoader(test, self.BATCH_SIZE, shuffle=True)
+        print('length of validation', len(test))
+
+        train_loader = DataLoader(train, self.BATCH_SIZE, shuffle=True, num_workers= 3)
+        test_loader = DataLoader(test, self.BATCH_SIZE, shuffle=True, num_workers= 3)
 
         self.model.pretrain = True
 
@@ -113,26 +111,32 @@ class LstmTrainVal(object):
         self.EPOCH = EPOCH
         self.BATCH_SIZE = BATCH_SIZE
         self.LR = LR
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.LR)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.LR, weight_decay = 1e-3)
         self.criterion = nn.CrossEntropyLoss()
 
     def train(self, labels, features, validation :tuple, transform, path, eval_intval=3):
-        dataset = SVRCDataset(features, labels, transform)
+        print('Training ResNet: ')
+
+        dataset = SVRCDataset(features, labels, transform['train'])
         data_loader = DataLoader(
             dataset, batch_sampler=BatchSampler(
                 SequentialSampler(dataset), 
                 self.BATCH_SIZE, 
-                drop_last=True
+                drop_last=True,
+                num_workers= 3
             )
         )
-        valid_set = SVRCDataset(validation[0], validation[1], transform)
+        valid_set = SVRCDataset(validation[0], validation[1], transform['valid'])
         valid_loader = DataLoader(
             valid_set, batch_sampler=BatchSampler(
                 SequentialSampler(valid_set), 
                 self.BATCH_SIZE, 
-                drop_last=True
+                drop_last=True,
+                num_workers= 3
             )
         )
+        print('length of train:', len(dataset))
+        print('length of validation', len(valid_set))
 
         self.model.pretrain = False
 
@@ -212,7 +216,7 @@ class Evaluator:
         self.device = device
 
     def predict(self, images, transform, pretrain):
-        dataset = SVRCDataset(images, None, transform)
+        dataset = SVRCDataset(images, None, transform['valid'])
         loader = DataLoader(dataset, batch_size=3, drop_last=True)
         preds = []
         self.model.pretrain = pretrain
@@ -221,9 +225,12 @@ class Evaluator:
             feature = data['feature'].float().to(self.device)
             pred = torch.max(self.model(feature).data, 1)[1]
             preds.append(pred)
-        return preds
+        return sum(list(map(torch.Tensor.tolist, preds)), [])
 
     def eval(self, preds, labels):
-        acc = sum([p == l for p,l in zip(sum(list(map(torch.Tensor.tolist, preds)), []), labels)]) / len(labels)
+        ''' Evaluate the predictions with ground truth labels. 
+            There should not be batched in preds and labels
+        '''
+        acc = sum([p == l for p,l in zip(preds, labels)]) / len(labels)
         print('Accuracy: {}'.format(acc))
         return acc
