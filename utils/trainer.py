@@ -117,7 +117,7 @@ class LstmTrainVal(object):
     def train(self, labels, features, validation :tuple, transform, path, eval_intval=3):
         print('Training ResNet: ')
 
-        dataset = SVRCDataset(features, labels, transform)
+        dataset = SVRCDataset(features, labels, transform['train'])
         data_loader = DataLoader(
             dataset, batch_sampler=BatchSampler(
                 SequentialSampler(dataset), 
@@ -125,7 +125,7 @@ class LstmTrainVal(object):
                 drop_last=True
             )
         )
-        valid_set = SVRCDataset(validation[0], validation[1], transform)
+        valid_set = SVRCDataset(validation[0], validation[1], transform['valid'])
         valid_loader = DataLoader(
             valid_set, batch_sampler=BatchSampler(
                 SequentialSampler(valid_set), 
