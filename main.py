@@ -20,14 +20,14 @@ def train(y:list, X:list, validation, pretrain = True) -> None:
 
     start_time = time.time()
     if pretrain == True:
-        trainer = ResnetTrainVal(model, device, EPOCH=5, BATCH_SIZE=64, LR=1e-5)
-        hist = trainer.train(y, X, validation, data_transform['train'], path=WeightsPath) #, val_ratio=0.7)
+        trainer = ResnetTrainVal(model, device, EPOCH=5, BATCH_SIZE=pretrain_batch, LR=1e-5)
+        hist = trainer.train(y, X, validation, data_transform, path=WeightsPath) #, val_ratio=0.7)
         with open(ResultsPath, 'w') as f:
             f.write(str(hist))
     else:
         model.load_state_dict(torch.load(WeightsPath, map_location=device), strict=False)
-        trainer = LstmTrainVal(model, device, EPOCH=5, BATCH_SIZE=3, LR=1e-7)
-        hist = trainer.train(y,X, validation, transform=data_transform['train'], path=WeightsPath_LSTM, eval_intval=1)
+        trainer = LstmTrainVal(model, device, EPOCH=5, BATCH_SIZE=lstm_batch, LR=1e-7)
+        hist = trainer.train(y,X, validation, transform=data_transform, path=WeightsPath_LSTM, eval_intval=1)
         with open(ResultsPath_LSTM, 'w') as f:
             f.write(str(hist))
 
@@ -45,7 +45,7 @@ def test(y, X, weights, batch, pretrain = False) -> list:
     if torch.cuda.is_available():
         model.to(device)
     model.load_state_dict(torch.load(weights, map_location=device))
-    predicts = model.predict(X, y, BATCH_SIZE=batch, transform = data_transform['train'], device=device)
+    predicts = model.predict(X, y, BATCH_SIZE=batch, transform = data_transform, device=device)
     return predicts
 
 def main():

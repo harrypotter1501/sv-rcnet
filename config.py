@@ -50,3 +50,7 @@ ResultsPath_LSTM = './results/hist_lstm_2.txt'
 
 # baseline classification model
 baseline = 'cnn'
+
+# hyper params
+pretrain_batch = 64
+lstm_batch = 16

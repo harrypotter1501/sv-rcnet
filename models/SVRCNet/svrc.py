@@ -13,7 +13,7 @@ num_labels = 14
 
 class CNN(nn.Module):
     def __init__(self):
-        super(CNN,self).__init__()
+        super().__init__()
         self.conv1 = nn.Sequential(
             nn.Conv2d(3,32,5,1,2),
             nn.ReLU(),
@@ -41,7 +41,7 @@ class CNN(nn.Module):
 
 class DeeperCNN(nn.Module):
     def __init__(self):
-        super(CNN,self).__init__()
+        super().__init__()
         self.conv1 = nn.Sequential(
             nn.Conv2d(3,32,5,1,2),
             nn.ReLU(),
@@ -103,26 +103,30 @@ class SVRC(nn.Module):
         #self.resnet18.eval()
         self.pretrain = True
         # LSTM
-        if lstm_dropout == 0.0:
-            self.lstm = nn.LSTM(512,512,num_layers=1)
-        else:
-            self.lstm = nn.LSTM(512,512,num_layers=2,dropout=lstm_dropout)
         self.lstm_states = None
+        if lstm_dropout == 0.0:
+            self.lstm = nn.LSTM(512,128,num_layers=1,batch_first=True)
+        else:
+            self.lstm = nn.LSTM(512,128,num_layers=2,dropout=lstm_dropout,batch_first=True)
+        self.linear = nn.Linear(512,128)
         # FC
-        self.full = nn.Linear(512,num_labels)
+        self.full = nn.Linear(128,num_labels)
 
     def forward(self,x):
         x = self.baseline(x)
         #x = self.resnet18(x)
         # Reshape
         #print(x.shape)
+        x = x.squeeze()
         if not self.pretrain:
-            x = x.view(3,1,-1) # time step, batch size
-            x,s = self.lstm(x, self.lstm_states)
+            #x = x.view(3,1,-1) # time step, batch size
+            x,s = self.lstm(x.unsqueeze(0), self.lstm_states)
+            x = x.squeeze()
             # save lstm states
             self.lstm_states = (s[0].detach(), s[1].detach())
-            
-        x = self.full(x.view(-1,512))
+        else:
+            x = self.linear(x)
+        x = self.full(x)
         return x #if self.pretrain else nn.Softmax(1)(x).view(30,-1)
 
     def predict(self, X, y, BATCH_SIZE, transform, device):
