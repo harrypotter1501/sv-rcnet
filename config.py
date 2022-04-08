@@ -27,7 +27,15 @@ image_paths, labels = read(videos, image_base, ind_end=70)
 
 # define transforms
 data_transform = {
-    "train": transforms.Compose([
+    'train': transforms.Compose([
+        #transforms.Resize((32,32)),
+        transforms.RandomHorizontalFlip(), 
+        transforms.RandomVerticalFlip(),
+        transforms.RandomResizedCrop(size=(32,32), scale=(0.4,1.0), ratio=(1.0,1.0)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485], std=[0.229])
+    ]), 
+    'valid': transforms.Compose([
         transforms.Resize((32,32)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485], std=[0.229])
@@ -42,3 +50,7 @@ ResultsPath_LSTM = './results/hist_lstm_2.txt'
 
 # baseline classification model
 baseline = 'cnn'
+
+# hyper params
+pretrain_batch = 64
+lstm_batch = 16

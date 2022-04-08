@@ -24,8 +24,8 @@ class ResnetTrainVal(object):
         # TRAIN_SIZE = int(val_ratio * len(features))
         # TEST_SIZE = len(features) - TRAIN_SIZE
 
-        train = SVRCDataset(features, labels, transform)
-        test = SVRCDataset(validation[0], validation[1], transform)
+        train = SVRCDataset(features, labels, transform['train'])
+        test = SVRCDataset(validation[0], validation[1], transform['valid'])
         #train, test = random_split(dataset, [TRAIN_SIZE, TEST_SIZE])
         print('length of train:', len(train))
         print('length of validation', len(test))
@@ -93,7 +93,7 @@ class ResnetTrainVal(object):
 
             print(
                 f'Epoch {epoch+1} Training Loss: {train_loss} Train_acc: {train_acc}'
-                f'|| Validation Loss: {valid_loss} Valid_acc: {valid_acc}'
+                f' || Validation Loss: {valid_loss} Valid_acc: {valid_acc}'
             )
 
         return {
@@ -117,7 +117,7 @@ class LstmTrainVal(object):
     def train(self, labels, features, validation :tuple, transform, path, eval_intval=3):
         print('Training ResNet: ')
 
-        dataset = SVRCDataset(features, labels, transform)
+        dataset = SVRCDataset(features, labels, transform['train'])
         data_loader = DataLoader(
             dataset, batch_sampler=BatchSampler(
                 SequentialSampler(dataset), 
@@ -125,7 +125,7 @@ class LstmTrainVal(object):
                 drop_last=True
             )
         )
-        valid_set = SVRCDataset(validation[0], validation[1], transform)
+        valid_set = SVRCDataset(validation[0], validation[1], transform['valid'])
         valid_loader = DataLoader(
             valid_set, batch_sampler=BatchSampler(
                 SequentialSampler(valid_set), 
@@ -173,11 +173,10 @@ class LstmTrainVal(object):
             hist_train_loss.append(train_loss)
             hist_train_acc.append(train_acc)
 
-            print(f'Epoch {epoch+1} Training Loss: {train_loss} Train_acc: {train_acc}')
+            valid_loss = 0.0
+            valid_acc = 0.0
 
             if (epoch + 1) % eval_intval == 0:
-                valid_loss = 0.0
-                valid_acc = 0.0
                 total = 0
                 self.model.eval()
                 for i, data in enumerate(valid_loader):
@@ -198,7 +197,10 @@ class LstmTrainVal(object):
                 hist_valid_loss.append(valid_loss)
                 hist_valid_acc.append(valid_acc)
 
-                print(f'Validation Loss: {valid_loss} Valid_acc: {valid_acc}')
+            print(
+                f'Epoch {epoch+1} Training Loss: {train_loss} Train_acc: {train_acc}'
+                f' || Validation Loss: {valid_loss} Valid_acc: {valid_acc}'
+            )
 
         return {
             'train_loss': hist_train_loss,
