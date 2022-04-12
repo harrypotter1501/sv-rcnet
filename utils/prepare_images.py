@@ -8,6 +8,13 @@ from datetime import datetime
 
 
 def prepare_images(videos, image_base, labels_df, names_df, image_ext='png'):
+    '''
+    Prepare images for network feeding.
+    Input args:
+        videos, image_base: Path of videos and images
+        labels_df, names_df: All labels for each frame, 14 label names
+        image_ext: Suffix of images
+    '''
     # convert time string to int
     # start time
     t0 = datetime(1900, 1, 1)

@@ -7,6 +7,16 @@ from utils.sortimages import sort_images
 
 
 def read(videos, image_base, ind_end:int, ind_start=0) -> tuple[list, list]:
+    '''
+    Read image frames from videos.
+    Input args:
+        videos: Path of hernia surgical videos
+        image_base: Path for saving image frames
+        ind_end: Ending index of video sequences
+        ind_start: Start index of video sequences
+    Outputs:
+        List of image paths and label paths
+    '''
     image_paths = []
     labels = []
     # get 2 images and labels

@@ -1,5 +1,5 @@
 '''
-Train SVRCNet
+Train SVRCNet.
 '''
 from unittest import result
 import torch
@@ -9,7 +9,13 @@ from models.SVRCNet.svrc import SVRC
 from utils.mydataset import SVRCDataset
 
 class ResnetTrainVal(object):
+    '''
+    Class for training Resnet.
+    '''
     def __init__(self, model, device, EPOCH, BATCH_SIZE, LR) -> None:
+        '''
+        ResNet training parameters initialization.
+        '''
         self.model = model
         self.device = device
         self.EPOCH = EPOCH
@@ -18,7 +24,17 @@ class ResnetTrainVal(object):
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.LR)
         self.criterion = nn.CrossEntropyLoss()
 
-    def train(self, labels, features, validation, transform, path): #, val_ratio=0.7):
+    def train(self, labels, features, validation:tuple, transform, path) -> dict: #, val_ratio=0.7):
+        '''
+        Training function for ResNet.
+        Input args:
+            labels, features: Traning data path
+            validation: Validation data path
+            transform: Data transformation chosen
+            path: Path for saving optimal model weights
+        Outputs: 
+            Dictionary of training history
+        '''
         print('Training ResNet: ')
 
         # TRAIN_SIZE = int(val_ratio * len(features))
@@ -105,7 +121,13 @@ class ResnetTrainVal(object):
 
 
 class LstmTrainVal(object):
+    '''
+    Class for training SVRCNet.
+    '''
     def __init__(self, model,device, EPOCH, BATCH_SIZE, LR) -> None:
+        '''
+        LSTM training parameters initialization.
+        '''
         self.model = model
         self.device = device
         self.EPOCH = EPOCH
@@ -114,7 +136,15 @@ class LstmTrainVal(object):
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.LR)
         self.criterion = nn.CrossEntropyLoss()
 
-    def train(self, labels, features, validation :tuple, transform, path, eval_intval=3):
+    def train(self, labels, features, validation:tuple, transform, path, eval_intval=3):
+        '''
+        Training function for SVRCNet.
+        Inputs:
+            Similar to the trainer for LSTM.
+            eval_intval: Step for validation (One validation for each eval_intval epochs)
+        Outputs:
+            Dictionary of training history
+        '''
         print('Training ResNet: ')
 
         dataset = SVRCDataset(features, labels, transform['train'])
@@ -211,11 +241,21 @@ class LstmTrainVal(object):
 
 
 class Evaluator:
+    '''
+    Evaluate dataset without labels.
+    '''
     def __init__(self, model, device):
         self.model = model
         self.device = device
 
     def predict(self, images, transform, pretrain):
+        '''
+        Predict input data.
+        Input args:
+            images: Path for evaluating data.
+            transform: Chosen data transformation method
+            pretrain: ResNet or SVRCNet mode
+        '''
         dataset = SVRCDataset(images, None, transform)
         loader = DataLoader(dataset, batch_size=3, drop_last=True)
         preds = []
@@ -228,8 +268,9 @@ class Evaluator:
         return sum(list(map(torch.Tensor.tolist, preds)), [])
 
     def eval(self, preds, labels):
-        ''' Evaluate the predictions with ground truth labels. 
-            There should not be batched in preds and labels
+        ''' 
+        Evaluate the predictions with ground truth labels. 
+        There should not be batched in preds and labels
         '''
         acc = sum([p == l for p,l in zip(preds, labels)]) / len(labels)
         print('Accuracy: {}'.format(acc))

@@ -1,7 +1,14 @@
+'''
+Build data structure for network feeding.
+'''
+
 from torch.utils.data import Dataset
 from PIL import Image
 
 class SVRCDataset(Dataset):
+    '''
+    Input data structure for SVRCNet,
+    '''
     def __init__(self, image_path: list, image_class: list=None, transform=None):
         self.image_path = image_path
         self.image_class = image_class

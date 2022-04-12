@@ -1,3 +1,8 @@
+'''
+Main exceution. Training, save and Test model.
+'''
+
+from typing import Dict
 from models.SVRCNet.svrc import SVRC
 from utils.trainer import ResnetTrainVal, LstmTrainVal
 from utils.sortimages import sort_images
@@ -12,7 +17,17 @@ import os
 from config import *
 
 
-def train(y:list, X:list, validation, pretrain = True) -> None:
+def train(y:list, X:list, validation:tuple, pretrain = True) -> dict:
+    '''
+    Train SVRCNet model and saved the best model.
+    Input args:
+        y: Labels from training data
+        X: Features from training data
+        validation: Choose validataion data set
+        pretrain: ResNet pretrain mode when pretrain=True; SVRC model when pretrain=False
+    Output:
+        hist: Dictionary of training and validation history
+    '''
     model = SVRC(baseline)
     model.pretrain = pretrain
     if torch.cuda.is_available():
@@ -39,6 +54,17 @@ def train(y:list, X:list, validation, pretrain = True) -> None:
     return hist
 
 def test(y, X, weights, batch, pretrain = False) -> list:
+    '''
+    Test SVRCNet model.
+    Input args:
+        y: Ground truth labels (y = None when labels are unknown) from test data
+        X: Features from test data
+        weights: Saved model path
+        batch: Test batch size
+        pretrain: Same as train function
+    Output:
+        predicts: Inferred labels from test data
+    '''
     predicts = []
     model = SVRC(baseline)
     model.pretrain = pretrain
@@ -49,6 +75,15 @@ def test(y, X, weights, batch, pretrain = False) -> list:
     return predicts
 
 def main():
+    '''
+    Main exceution function.
+        X,y: training data feature, labels
+        X_test,y_test: test data feature, labels
+        hist_res: history of pretraining ResNet
+        preds_res: test results using ResNet
+        hist_svrc: history of training SVRCNet
+        preds_svrc: test results using SVRCNet
+    '''
     X = sum(image_paths[:50], [])
     y = sum(labels[:50], [])
     X_test = sum(image_paths[50:70], [])
