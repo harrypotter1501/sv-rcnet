@@ -30,7 +30,7 @@ class CNN(nn.Module):
             nn.MaxPool2d(2),
         )
         self.pool = nn.AdaptiveAvgPool2d((1,1))
-    
+
     def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
@@ -92,7 +92,7 @@ class SVRC(nn.Module):
     def __init__(self, baseline, lstm_dropout=0.0):
         super().__init__()
         assert baseline in baseline_models.keys(), \
-            'Unknow baseline model, use on of: {}'.format(baseline_models.keys())
+            'Unknow baseline model, use one of: {}'.format(baseline_models.keys())
         # ResNet-18
         self.resnet18 = nn.Sequential(*(
             list(
