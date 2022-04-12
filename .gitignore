@@ -5,3 +5,6 @@ __pycache__
 
 data/videos/*
 data/images/*
+
+results/*.txt
+results/*.jpg
