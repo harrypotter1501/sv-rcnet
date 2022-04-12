@@ -6,7 +6,7 @@ This project reproduced the basic structure and worflow of SV-RCNet for surgical
 
 Multiple regularization techniques including augmentation, dropout and weight-decay were introduced and the effectiveness was studied with experiments. The ResNet+LSTM structure is proved to be competent in learning and predicting surgical phases by respectively capturing visual features and temporal information. 
 
-The model achieved 78.63% accuracy on Kaggle test sets. ([results/kaggle_preds_acc82_2.csv](https://github.com/ecbme6040/e6691-2022spring-assign2-VCSZ-yc3998-fs2752-cz2678/blob/07b40b79e149527d9911fd8a5955a3fc874b0fcc/results/kaggle_preds_acc82_2.csv))
+The model achieved 78.63% accuracy on Kaggle test sets. ([results/kaggle_preds_acc82_2.csv](https://github.com/ecbme6040/e6691-2022spring-assign2-VCSZ-yc3998-fs2752-cz2678/blob/cd91ba23f6924ba597a7b3bfd11a7973981be462/results/kaggle_preds_acc82_2.csv))
 
 ## Installation
 
